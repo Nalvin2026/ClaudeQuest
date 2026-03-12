@@ -1,0 +1,1483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClaudeQuest — Learn to Vibe Code</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131f;
+      --surface-2: #1c1c2e;
+      --border: #2a2a3e;
+      --primary: #7c3aed;
+      --primary-hover: #6d28d9;
+      --primary-glow: rgba(124,58,237,0.3);
+      --accent: #f97316;
+      --accent-glow: rgba(249,115,22,0.3);
+      --success: #10b981;
+      --success-glow: rgba(16,185,129,0.3);
+      --error: #ef4444;
+      --error-glow: rgba(239,68,68,0.3);
+      --xp: #f59e0b;
+      --text: #e2e8f0;
+      --text-muted: #64748b;
+      --text-soft: #94a3b8;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── LAYOUT ── */
+    #app { display: flex; min-height: 100vh; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 240px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 10;
+    }
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 12px 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 8px;
+    }
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--primary), #a855f7);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .logo-text { font-weight: 800; font-size: 18px; letter-spacing: -0.5px; }
+    .logo-text span { color: var(--primary); }
+
+    .nav-btn {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--text-soft);
+      font-size: 14px; font-weight: 600;
+      width: 100%;
+      transition: all 0.15s;
+      font-family: 'Inter', sans-serif;
+    }
+    .nav-btn:hover { background: var(--surface-2); color: var(--text); }
+    .nav-btn.active { background: var(--primary-glow); color: var(--primary); }
+    .nav-btn .icon { font-size: 18px; width: 24px; text-align: center; }
+
+    .sidebar-stats {
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .stat-row { display: flex; align-items: center; gap: 10px; padding: 0 4px; }
+    .stat-icon { font-size: 20px; width: 24px; text-align: center; }
+    .stat-info { flex: 1; }
+    .stat-label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-value { font-size: 16px; font-weight: 800; }
+    .stat-value.xp { color: var(--xp); }
+    .stat-value.streak { color: var(--accent); }
+    .stat-value.hearts { color: var(--error); }
+
+    .xp-bar-wrap { padding: 0 4px; }
+    .xp-bar-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 6px; }
+    .xp-bar { height: 8px; background: var(--border); border-radius: 99px; overflow: hidden; }
+    .xp-bar-fill { height: 100%; background: linear-gradient(90deg, var(--xp), #fbbf24); border-radius: 99px; transition: width 0.6s cubic-bezier(.34,1.56,.64,1); }
+
+    /* ── MAIN ── */
+    .main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; }
+
+    /* ── SCREEN ── */
+    .screen { display: none; flex: 1; }
+    .screen.active { display: flex; flex-direction: column; }
+
+    /* ── MAP SCREEN ── */
+    #screen-map { align-items: center; padding: 40px 24px 80px; }
+    .map-header { text-align: center; margin-bottom: 48px; }
+    .map-header h1 { font-size: 32px; font-weight: 900; letter-spacing: -1px; margin-bottom: 8px; }
+    .map-header p { color: var(--text-soft); font-size: 15px; }
+    .path { display: flex; flex-direction: column; align-items: center; gap: 0; width: 100%; max-width: 500px; }
+
+    .unit-block { width: 100%; }
+    .unit-banner {
+      background: linear-gradient(135deg, var(--primary), #a855f7);
+      border-radius: 16px;
+      padding: 16px 24px;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .unit-banner.locked { background: var(--surface-2); }
+    .unit-banner-icon { font-size: 28px; }
+    .unit-banner-info { flex: 1; }
+    .unit-banner-title { font-weight: 800; font-size: 16px; }
+    .unit-banner-subtitle { font-size: 13px; opacity: 0.8; margin-top: 2px; }
+    .unit-banner.locked .unit-banner-title,
+    .unit-banner.locked .unit-banner-subtitle { color: var(--text-muted); }
+    .unit-banner-progress { font-weight: 700; font-size: 13px; }
+
+    .lessons-path {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 40px;
+      padding: 0 20px;
+      position: relative;
+    }
+    .lessons-path::before {
+      content: '';
+      position: absolute;
+      left: 50%; top: 0; bottom: 0;
+      width: 2px;
+      background: var(--border);
+      transform: translateX(-50%);
+      z-index: 0;
+    }
+
+    .lesson-node {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .lesson-node:nth-child(even) { align-self: flex-end; margin-right: 60px; }
+    .lesson-node:nth-child(odd) { align-self: flex-start; margin-left: 60px; }
+
+    .lesson-btn {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      position: relative;
+      transition: all 0.2s;
+      box-shadow: 0 4px 0 rgba(0,0,0,0.4);
+    }
+    .lesson-btn.completed {
+      background: linear-gradient(135deg, var(--success), #34d399);
+      box-shadow: 0 4px 0 #065f46, 0 0 20px var(--success-glow);
+    }
+    .lesson-btn.current {
+      background: linear-gradient(135deg, var(--primary), #a855f7);
+      box-shadow: 0 4px 0 #4c1d95, 0 0 24px var(--primary-glow);
+      animation: pulse 2s infinite;
+    }
+    .lesson-btn.locked {
+      background: var(--surface-2);
+      box-shadow: 0 4px 0 #0f0f1a;
+      cursor: not-allowed;
+      filter: grayscale(1);
+    }
+    .lesson-btn:not(.locked):hover { transform: translateY(-3px); }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 4px 0 #4c1d95, 0 0 20px var(--primary-glow); }
+      50% { box-shadow: 0 4px 0 #4c1d95, 0 0 36px rgba(124,58,237,0.6); }
+    }
+
+    .lesson-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-align: center;
+      max-width: 90px;
+    }
+    .lesson-label.current { color: var(--text); }
+    .lesson-label.completed { color: var(--success); }
+
+    .crown-badge {
+      position: absolute;
+      top: -8px;
+      right: -6px;
+      font-size: 14px;
+    }
+
+    /* ── LESSON SCREEN ── */
+    #screen-lesson {
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .lesson-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 20px 32px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .close-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 20px;
+      padding: 4px;
+      border-radius: 8px;
+      transition: all 0.15s;
+    }
+    .close-btn:hover { background: var(--surface-2); color: var(--text); }
+    .progress-bar-wrap { flex: 1; }
+    .progress-bar {
+      height: 12px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), #a855f7);
+      border-radius: 99px;
+      transition: width 0.4s cubic-bezier(.34,1.56,.64,1);
+    }
+    .hearts-display { display: flex; gap: 4px; font-size: 22px; }
+
+    .lesson-body {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 32px;
+    }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      max-width: 640px;
+      width: 100%;
+      animation: slideUp 0.4s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Info card */
+    .info-card .card-emoji {
+      font-size: 56px;
+      text-align: center;
+      display: block;
+      margin-bottom: 20px;
+    }
+    .info-card h2 {
+      font-size: 24px;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 16px;
+      letter-spacing: -0.5px;
+    }
+    .info-card .content {
+      color: var(--text-soft);
+      font-size: 15px;
+      line-height: 1.7;
+      text-align: center;
+    }
+    .info-card .highlight {
+      display: inline-block;
+      background: var(--primary-glow);
+      color: var(--primary);
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-family: 'Courier New', monospace;
+    }
+    .info-card .tip {
+      margin-top: 20px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 14px;
+      color: var(--text-soft);
+      text-align: left;
+    }
+    .info-card .tip strong { color: var(--accent); }
+    .info-card .code-block {
+      text-align: left;
+      margin: 16px 0 0;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    /* Question card */
+    .question-card .question-tag {
+      display: inline-block;
+      background: var(--primary-glow);
+      color: var(--primary);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 4px 10px;
+      border-radius: 99px;
+      margin-bottom: 16px;
+    }
+    .question-card h2 {
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1.4;
+      margin-bottom: 8px;
+      letter-spacing: -0.3px;
+    }
+    .question-card .subtitle {
+      color: var(--text-soft);
+      font-size: 14px;
+      margin-bottom: 28px;
+    }
+    .code-block {
+      background: #1e1e2e;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      color: #cdd6f4;
+      margin-bottom: 28px;
+      white-space: pre;
+    }
+    .code-block .cmd { color: #89b4fa; }
+    .code-block .comment { color: #6c7086; }
+    .code-block .string { color: #a6e3a1; }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .options-grid.single { grid-template-columns: 1fr; }
+    .option-btn {
+      background: var(--surface-2);
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      cursor: pointer;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: left;
+      transition: all 0.15s;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      line-height: 1.4;
+    }
+    .option-btn .opt-letter {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      background: var(--border);
+      color: var(--text-muted);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .option-btn:hover:not(:disabled) {
+      border-color: var(--primary);
+      background: var(--primary-glow);
+      transform: translateY(-1px);
+    }
+    .option-btn.selected { border-color: var(--primary); background: var(--primary-glow); }
+    .option-btn.correct { border-color: var(--success); background: var(--success-glow); color: var(--success); }
+    .option-btn.correct .opt-letter { background: var(--success); color: white; }
+    .option-btn.wrong { border-color: var(--error); background: var(--error-glow); color: var(--error); }
+    .option-btn.wrong .opt-letter { background: var(--error); color: white; }
+    .option-btn:disabled { cursor: not-allowed; }
+
+    /* Feedback bar */
+    .feedback-bar {
+      padding: 20px 32px;
+      border-top: 1px solid var(--border);
+      display: none;
+      align-items: center;
+      gap: 16px;
+    }
+    .feedback-bar.correct { background: rgba(16,185,129,0.1); border-top-color: var(--success); display: flex; }
+    .feedback-bar.wrong { background: rgba(239,68,68,0.1); border-top-color: var(--error); display: flex; }
+    .feedback-icon { font-size: 32px; }
+    .feedback-text h3 { font-size: 16px; font-weight: 800; }
+    .feedback-text p { font-size: 14px; color: var(--text-soft); margin-top: 2px; }
+    .feedback-bar.correct .feedback-text h3 { color: var(--success); }
+    .feedback-bar.wrong .feedback-text h3 { color: var(--error); }
+    .continue-btn {
+      margin-left: auto;
+      padding: 12px 28px;
+      border-radius: 12px;
+      border: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .feedback-bar.correct .continue-btn { background: var(--success); color: white; }
+    .feedback-bar.wrong .continue-btn { background: var(--error); color: white; }
+    .continue-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+
+    .check-btn {
+      display: block;
+      width: 100%;
+      margin-top: 24px;
+      padding: 16px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 14px;
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.3px;
+    }
+    .check-btn:hover { background: var(--primary-hover); transform: translateY(-2px); }
+    .check-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    /* ── COMPLETE SCREEN ── */
+    #screen-complete {
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      text-align: center;
+    }
+    .complete-card {
+      max-width: 480px;
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 48px 40px;
+    }
+    .complete-trophy { font-size: 80px; margin-bottom: 20px; animation: bounceIn 0.6s cubic-bezier(.34,1.56,.64,1); }
+    @keyframes bounceIn {
+      0% { transform: scale(0); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .complete-card h1 { font-size: 32px; font-weight: 900; margin-bottom: 8px; letter-spacing: -1px; }
+    .complete-card .sub { color: var(--text-soft); font-size: 16px; margin-bottom: 36px; }
+    .complete-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .complete-stat {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 12px;
+    }
+    .complete-stat .val { font-size: 24px; font-weight: 900; }
+    .complete-stat .lbl { font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+    .complete-stat.xp-stat .val { color: var(--xp); }
+    .complete-stat.acc-stat .val { color: var(--success); }
+    .complete-stat.time-stat .val { color: var(--primary); }
+
+    .home-btn {
+      display: block;
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, var(--primary), #a855f7);
+      color: white;
+      border: none;
+      border-radius: 14px;
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .home-btn:hover { transform: translateY(-3px); filter: brightness(1.1); box-shadow: 0 8px 24px var(--primary-glow); }
+
+    /* ── PROFILE SCREEN ── */
+    #screen-profile { padding: 40px 32px; max-width: 700px; margin: 0 auto; width: 100%; }
+    .profile-header { margin-bottom: 32px; }
+    .profile-header h1 { font-size: 28px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 4px; }
+    .profile-header p { color: var(--text-soft); }
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+    }
+    .stat-card .sc-icon { font-size: 32px; margin-bottom: 8px; }
+    .stat-card .sc-val { font-size: 28px; font-weight: 900; }
+    .stat-card .sc-lbl { font-size: 13px; color: var(--text-muted); font-weight: 600; margin-top: 4px; }
+    .stat-card.xp .sc-val { color: var(--xp); }
+    .stat-card.streak .sc-val { color: var(--accent); }
+    .stat-card.lessons .sc-val { color: var(--primary); }
+    .achievements-section h2 { font-size: 18px; font-weight: 800; margin-bottom: 16px; }
+    .achievements-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .achievement {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .achievement.unlocked { border-color: var(--xp); background: rgba(245,158,11,0.05); }
+    .achievement.locked { opacity: 0.4; filter: grayscale(1); }
+    .ach-icon { font-size: 32px; }
+    .ach-info {}
+    .ach-name { font-weight: 700; font-size: 14px; }
+    .ach-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    /* ── XP POPUP ── */
+    .xp-popup {
+      position: fixed;
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--xp);
+      pointer-events: none;
+      z-index: 999;
+      animation: xpFloat 1.2s ease-out forwards;
+    }
+    @keyframes xpFloat {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-80px) scale(1.4); }
+    }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 32px; left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 24px;
+      font-weight: 600;
+      font-size: 14px;
+      z-index: 999;
+      animation: toastIn 0.3s cubic-bezier(.34,1.56,.64,1) forwards;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+      to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .sidebar { width: 64px; padding: 16px 8px; }
+      .logo-text, .nav-btn span, .stat-info, .xp-bar-wrap { display: none; }
+      .main { margin-left: 64px; }
+      .nav-btn { justify-content: center; padding: 12px; }
+      .lesson-header { padding: 16px; }
+      .lesson-body { padding: 20px 16px; }
+      .feedback-bar { padding: 16px; }
+      .options-grid { grid-template-columns: 1fr; }
+      .complete-stats { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">✦</div>
+      <div class="logo-text">Claude<span>Quest</span></div>
+    </div>
+    <button class="nav-btn active" onclick="showScreen('map')" id="nav-map">
+      <span class="icon">🗺️</span><span>Learn</span>
+    </button>
+    <button class="nav-btn" onclick="showScreen('profile')" id="nav-profile">
+      <span class="icon">👤</span><span>Profile</span>
+    </button>
+
+    <div class="sidebar-stats">
+      <div class="stat-row">
+        <div class="stat-icon">🔥</div>
+        <div class="stat-info">
+          <div class="stat-label">Streak</div>
+          <div class="stat-value streak" id="sidebar-streak">0</div>
+        </div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-icon">❤️</div>
+        <div class="stat-info">
+          <div class="stat-label">Hearts</div>
+          <div class="stat-value hearts" id="sidebar-hearts">3</div>
+        </div>
+      </div>
+      <div class="xp-bar-wrap">
+        <div class="xp-bar-label">
+          <span id="xp-level-label">Level 1</span>
+          <span id="xp-label">0 XP</span>
+        </div>
+        <div class="xp-bar"><div class="xp-bar-fill" id="xp-bar-fill" style="width:0%"></div></div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+    <!-- MAP SCREEN -->
+    <div class="screen active" id="screen-map">
+      <div class="map-header">
+        <h1>Learn to Vibe Code 🧬</h1>
+        <p>Your journey from designer to AI-powered builder starts here</p>
+      </div>
+      <div class="path" id="path-container"></div>
+    </div>
+
+    <!-- LESSON SCREEN -->
+    <div class="screen" id="screen-lesson">
+      <div class="lesson-header">
+        <button class="close-btn" onclick="exitLesson()">✕</button>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar">
+            <div class="progress-bar-fill" id="lesson-progress" style="width:0%"></div>
+          </div>
+        </div>
+        <div class="hearts-display" id="hearts-display">❤️❤️❤️</div>
+      </div>
+      <div class="lesson-body" id="lesson-body"></div>
+      <div class="feedback-bar" id="feedback-bar">
+        <div class="feedback-icon" id="feedback-icon"></div>
+        <div class="feedback-text">
+          <h3 id="feedback-title"></h3>
+          <p id="feedback-desc"></p>
+        </div>
+        <button class="continue-btn" id="continue-btn" onclick="nextExercise()">Continue</button>
+      </div>
+    </div>
+
+    <!-- COMPLETE SCREEN -->
+    <div class="screen" id="screen-complete">
+      <div class="complete-card">
+        <div class="complete-trophy">🏆</div>
+        <h1>Lesson Complete!</h1>
+        <p class="sub" id="complete-lesson-name">You crushed it</p>
+        <div class="complete-stats">
+          <div class="complete-stat xp-stat">
+            <div class="val" id="complete-xp">+20</div>
+            <div class="lbl">XP Earned</div>
+          </div>
+          <div class="complete-stat acc-stat">
+            <div class="val" id="complete-acc">100%</div>
+            <div class="lbl">Accuracy</div>
+          </div>
+          <div class="complete-stat time-stat">
+            <div class="val" id="complete-time">1m</div>
+            <div class="lbl">Time</div>
+          </div>
+        </div>
+        <button class="home-btn" onclick="finishLesson()">Continue Learning →</button>
+      </div>
+    </div>
+
+    <!-- PROFILE SCREEN -->
+    <div class="screen" id="screen-profile">
+      <div class="profile-header">
+        <h1>Your Progress</h1>
+        <p>Keep building that vibe coding streak! 🔥</p>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card xp">
+          <div class="sc-icon">⭐</div>
+          <div class="sc-val" id="profile-xp">0</div>
+          <div class="sc-lbl">Total XP</div>
+        </div>
+        <div class="stat-card streak">
+          <div class="sc-icon">🔥</div>
+          <div class="sc-val" id="profile-streak">0</div>
+          <div class="sc-lbl">Day Streak</div>
+        </div>
+        <div class="stat-card lessons">
+          <div class="sc-icon">✅</div>
+          <div class="sc-val" id="profile-lessons">0</div>
+          <div class="sc-lbl">Lessons Done</div>
+        </div>
+      </div>
+      <div class="achievements-section">
+        <h2>Achievements</h2>
+        <div class="achievements-grid" id="achievements-grid"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  CURRICULUM DATA
+// ═══════════════════════════════════════════════════════
+const CURRICULUM = [
+  {
+    id: 'unit1', title: 'The Vibe Coding Mindset', icon: '🧠',
+    color: 'linear-gradient(135deg, #7c3aed, #a855f7)',
+    lessons: [
+      {
+        id: 'l1_1', title: 'What is Vibe Coding?', emoji: '✨', xp: 15,
+        exercises: [
+          { type: 'info', emoji: '✨', title: 'Welcome to Vibe Coding', content: 'Vibe coding is writing software by describing what you want in plain English — no memorizing syntax, no Stack Overflow rabbit holes. You describe the vibe, the AI writes the code. As a designer, you already think in visuals and intentions. That\'s exactly what vibe coding needs.', tip: '<strong>Designer superpower:</strong> Your eye for detail makes you a better prompter than most developers.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'What is vibe coding?', sub: 'Pick the best description.', options: ['Writing software in a chill environment with lo-fi music and coffee', 'Describing what you want in plain English and letting AI write the code', 'A visual programming language designed specifically for creative people', 'Using AI autocomplete tools to write code faster in your text editor'], correct: 1, expl: 'Vibe coding = describe it → AI codes it. You focus on the what, not the how.' },
+          { type: 'mc', tag: 'True or False', q: 'To use Claude Code, you need years of programming experience.', sub: '', options: ['True — you must study syntax and programming patterns before starting', 'False — plain English is all you need, including total beginners'], correct: 1, expl: 'False! Claude Code is designed for everyone, including designers with zero coding background.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'As a designer, your biggest advantage in vibe coding is...', sub: '', options: ['Having memorized CSS properties and values from years of design work', 'Your ability to clearly describe visual intent in precise, natural language', 'Owning a powerful computer with lots of RAM and a fast graphics card', 'Knowing multiple programming languages like JavaScript and Python already'], correct: 1, expl: 'Designers can articulate exactly what they see and want — that clarity makes amazing prompts!' }
+        ]
+      },
+      {
+        id: 'l1_2', title: 'Meet Claude Code', emoji: '🤖', xp: 15,
+        exercises: [
+          { type: 'info', emoji: '🤖', title: 'Your AI Dev Partner', content: 'Claude Code is an AI assistant that lives in your terminal (the black/dark window on your computer). You type what you want, and it reads your files, writes code, and makes changes — all while explaining everything it does. Think of it like hiring a genius developer who works instantly, never gets tired, and never judges your questions.', tip: '<strong>Fun fact:</strong> Claude Code can read your entire project and understand it in seconds.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'Where does Claude Code live?', sub: '', options: ['As a plugin inside web browsers like Chrome and Firefox', 'In your terminal — the text-based window on your computer', 'Built into design tools like Figma, Sketch, and Adobe XD', 'As a standalone desktop app you download from the App Store'], correct: 1, expl: 'Claude Code runs in your terminal — that dark text window. It\'s friendlier than it looks!' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'What can Claude Code do?', sub: 'Select the most complete and accurate answer.', options: ['Create brand-new files but cannot read or modify existing project files', 'Read your existing files and write new code, but cannot edit them', 'Read files, write code, edit files, and explain every single change it makes', 'Find and fix bugs, but only in JavaScript or Python projects specifically'], correct: 2, expl: 'Claude Code is a full partner — it reads, writes, edits, explains, and even catches mistakes!' },
+          { type: 'mc', tag: 'True or False', q: 'Claude Code can see and understand your entire project codebase.', sub: '', options: ['True — it reads all your files to understand the full project context', 'False — it only processes the single file you explicitly show it'], correct: 0, expl: 'True! Claude Code reads your whole project so it understands context before making changes.' }
+        ]
+      },
+      {
+        id: 'l1_3', title: "Why You'll Excel", emoji: '🎨', xp: 15,
+        exercises: [
+          { type: 'info', emoji: '🎨', title: "The Designer's Edge", content: "Here's a secret: most developers struggle to describe what good design feels like. You already know. When you say 'make it feel airy and modern with lots of breathing room,' Claude understands perfectly. Your design vocabulary translates directly into better, more precise prompts.", tip: '<strong>Your design language is code language.</strong> "Rounded corners," "muted tones," "generous padding" — Claude knows exactly what these mean.' },
+          { type: 'mc', tag: 'Complete the Prompt', q: 'You want a button with rounded corners and a drop shadow. The best prompt is:', sub: 'Choose the most effective prompt.', options: ['"Update the button styling to look nicer and more polished overall"', '"Add border-radius and box-shadow CSS properties to the button element"', '"Make the button have rounded corners with a subtle drop shadow underneath"', '"Give the button some design treatment to make it fit the rest of the page"'], correct: 2, expl: 'Specific design language works great! Claude understands "rounded corners" and "subtle drop shadow" perfectly.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'Which skill from your design career helps most with vibe coding?', sub: '', options: ['Advanced Photoshop skills including layers, masks, and blend modes', 'Clearly describing visual intent in natural, specific, and precise language', 'Deep knowledge of typography systems, type scales, and font pairing rules', 'Managing complex design systems across multiple product teams and brands'], correct: 1, expl: 'The ability to articulate exactly what you see and want is the #1 skill in vibe coding.' },
+          { type: 'mc', tag: 'True or False', q: 'Design terms like "whitespace," "hierarchy," and "contrast" are valid things to say to Claude Code.', sub: '', options: ['True — Claude fully understands design vocabulary and language', 'False — you must translate everything into technical CSS property names'], correct: 0, expl: 'Absolutely true! Claude speaks fluent design. Use the vocabulary you already know.' }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'unit2', title: 'Your First Steps', icon: '🚀',
+    color: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
+    lessons: [
+      {
+        id: 'l2_1', title: 'The Terminal (No Panic!)', emoji: '💻', xp: 20,
+        exercises: [
+          { type: 'info', emoji: '💻', title: 'The Terminal is Your Friend', content: 'The terminal (also called the command line) is just a text-based way to talk to your computer. On Mac, it\'s called Terminal. On Windows, use PowerShell or Windows Terminal. You type a command, press Enter, and things happen. That\'s all it is! You don\'t need to memorize much — Claude Code handles the complex stuff.', tip: '<strong>Mac shortcut:</strong> Press Cmd+Space, type "Terminal", press Enter. You\'re in!' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'What is the terminal?', sub: '', options: ['A design application similar to Figma or other creative software tools', 'A text-based interface for giving commands directly to your computer', 'A special widescreen monitor that programmers use for coding work', 'A programming language specifically designed for system administration tasks'], correct: 1, expl: 'The terminal is just a text interface for your computer. Type a command, get results. Simple!' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'How do you open Terminal on a Mac?', sub: '', options: ['Press Ctrl+T to open a new terminal tab inside your web browser', 'Press Cmd+Space to open Spotlight, type Terminal, then press Enter', 'Right-click the desktop and select "Open Terminal Here" from the menu', 'Click the Apple menu at the top and find Terminal under Applications'], correct: 1, expl: 'Cmd+Space opens Spotlight. Type "Terminal" and press Enter. That\'s the fastest way!' },
+          { type: 'mc', tag: 'True or False', q: 'You need to memorize hundreds of terminal commands to use Claude Code.', sub: '', options: ['True — the terminal has a steep learning curve with many required commands', 'False — Claude Code handles complexity and you only need a few basics'], correct: 1, expl: 'False! You only need a few basics like cd. Claude Code does the heavy terminal lifting for you.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'To navigate into a project folder in the terminal, you use:', sub: "cd stands for 'change directory'", options: ['"goto foldername" — the go-to command is a standard terminal shortcut', '"open foldername" — the open command navigates to any folder you name', '"cd foldername" — cd stands for change directory and works everywhere', '"enter foldername" — enter is the most intuitive navigation command option'], correct: 2, expl: 'cd = change directory. Type "cd myproject" and you\'re in that folder!' }
+        ]
+      },
+      {
+        id: 'l2_2', title: 'Starting Claude Code', emoji: '⚡', xp: 20,
+        exercises: [
+          { type: 'info', emoji: '⚡', title: 'Launching Your AI Partner', content: 'Once Claude Code is installed (via npm), you start it with one command. Navigate to your project folder in the terminal, then type claude and press Enter. That\'s it! You\'ll see a prompt where you can start typing your requests in plain English. No configuration needed.', tip: '<strong>First time?</strong> Install with: <span class="highlight">npm install -g @anthropic-ai/claude-code</span>' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'What single command starts Claude Code?', sub: 'After navigating to your project folder...', options: ['"start claude" — most CLI tools use the word start as their launch prefix', '"run claude" — the run command executes any installed package by its name', '"claude" — just the name alone, typed with nothing before or after it', '"anthropic" — the company name serves as the launch command alias'], correct: 2, expl: 'Just type claude and press Enter. Short, simple, and sweet!' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'Before starting Claude Code, you should always:', sub: '', options: ['Open Figma so you can reference design files while working in Claude', 'Navigate into your project folder first using cd in the terminal', 'Open Chrome so you can preview changes in the browser immediately', 'Create a new project folder somewhere on your Desktop for this session'], correct: 1, expl: 'Always cd into your project folder first so Claude Code can see all your files!' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'How do you install Claude Code for the first time?', sub: 'Node.js must be installed first — it comes with npm.', options: ['Download the installer from the App Store and follow the setup wizard', 'npm install -g @anthropic-ai/claude-code (run this once, globally)', 'pip install claude-code (Python\'s pip installs most AI tools globally)', 'brew install claude-code (Homebrew is the standard Mac install method)'], correct: 1, expl: 'npm install -g installs it globally so you can use it from any project folder.' },
+          { type: 'mc', tag: 'True or False', q: 'You need to restart Claude Code every time you want to ask a new question.', sub: '', options: ['True — each question requires a fresh session to avoid context confusion', 'False — you can keep chatting in one continuous session without restarting'], correct: 1, expl: 'False! Claude Code is fully conversational. Keep chatting, refining, and building continuously.' }
+        ]
+      },
+      {
+        id: 'l2_3', title: 'Your First Prompt', emoji: '💬', xp: 20,
+        exercises: [
+          { type: 'info', emoji: '💬', title: 'Just Talk to It!', content: 'Your first prompt can be anything! Ask Claude Code to create a file, explain code, or build something. The key is to be clear and specific about what you want. You don\'t need special syntax — just write like you\'d explain it to a smart colleague. The more context you give, the better the result.', tip: '<strong>Try saying:</strong> "Create a simple HTML page with a purple hero section, a headline that says Hello World, and a centered white button."' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'What happens when you type your first message in Claude Code?', sub: '', options: ['It crashes immediately — you need to run a setup command to configure it first', 'It reads your message, understands what you want, and starts working on it', 'You need to press a special mode key before typing your very first message', 'Nothing happens until you provide your API key manually in a config file'], correct: 1, expl: 'Just type and press Enter! Claude reads your request and starts working immediately.' },
+          { type: 'mc', tag: 'Complete the Prompt', q: 'You want to create a landing page. Which prompt gets the best result?', sub: '', options: ['"Make me a nice page, you know what I mean, just make it look good for me"', '"Create a landing page" — concise prompts let Claude make all design decisions', '"Create a landing page: dark hero section, bold headline, CTA button below"', '"HTML file please with some content, make it suitable for a landing page"'], correct: 2, expl: 'Specific details = better results! Key sections + a visual direction gets you closer on the first try.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'Claude Code asks you a clarifying question about your request. What do you do?', sub: '', options: ['Start a completely new session and rephrase your original request differently', 'Answer it naturally in plain English — Claude continues working from there', 'Type your original request again, word for word, exactly as you wrote it before', 'Ignore the question and repeat your message one more time to move forward'], correct: 1, expl: 'Just answer naturally! Claude has a conversation with you to build exactly what you want.' },
+          { type: 'mc', tag: 'True or False', q: 'You should use technical programming terms when writing prompts to Claude.', sub: '', options: ['True — technical terms help Claude understand your exact requirements better', 'False — plain English works great and often produces clearer, better results'], correct: 1, expl: 'False! Plain English is perfect. "A blue button that gets darker when hovered" beats CSS jargon every time.' }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'unit3', title: 'Prompting Like a Designer', icon: '🎨',
+    color: 'linear-gradient(135deg, #f97316, #ef4444)',
+    lessons: [
+      {
+        id: 'l3_1', title: 'Describe What You See', emoji: '👁️', xp: 25,
+        exercises: [
+          { type: 'info', emoji: '👁️', title: 'Your Design Eye as a Superpower', content: 'When you look at a website or app, you see things most people miss: the spacing, the type hierarchy, the color relationships, the motion. All of that description? That\'s a perfect Claude Code prompt. Describe what you see in your mind\'s eye and Claude will build it.', tip: '<strong>Tip:</strong> Imagine you\'re writing a design spec for a developer. That level of detail makes the perfect prompt.' },
+          { type: 'mc', tag: 'Complete the Prompt', q: 'You want to create a card component. Which prompt gives Claude the most to work with?', sub: '', options: ['"Make something like a card — it should look like a clean product listing"', '"Create a card component with some basic styling and a couple of content areas"', '"Create a card: white bg, 24px padding, soft shadow, rounded corners, image, title, description"', '"Build a product card with whatever design details you think look most appropriate"'], correct: 2, expl: 'Describe it like a design spec! Visual detail on the first prompt means fewer revisions needed.' },
+          { type: 'mc', tag: 'Multiple Choice', q: "You're redesigning a nav bar. What's the most useful thing to describe first?", sub: '', options: ['Exact hex color codes for every element to the precision of six digits', 'The visual feel, layout direction, and spacing you want it to achieve', 'The JavaScript event handlers and DOM selectors the nav bar will need', 'The file names, folder structure, and import paths for this component'], correct: 1, expl: 'Visual feel first — "clean, minimal, breathing room, subtle border." Claude handles the code.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'The phrase "make it feel more premium" is:', sub: '', options: ['Too vague to be useful — Claude cannot interpret subjective design feelings', 'A great starting point — Claude understands design language very deeply', 'Only valid once you define premium using specific CSS property values', 'A prompt mistake that will cause Claude to ask you to completely start over'], correct: 1, expl: 'Claude understands "premium" means refined typography, subtle shadows, generous spacing. Use your vocab!' }
+        ]
+      },
+      {
+        id: 'l3_2', title: 'Be Specific', emoji: '🎯', xp: 25,
+        exercises: [
+          { type: 'info', emoji: '🎯', title: 'Specificity Wins Every Time', content: 'Vague prompts get vague results. Specific prompts get exactly what you want. Instead of "change the button," say "change the button to a soft coral color with 8px rounded corners and remove the border." Think of it like writing a design annotation — every detail helps.', tip: '<strong>The rule:</strong> If you\'d annotate it in Figma, mention it in your prompt.' },
+          { type: 'mc', tag: 'Compare Prompts', q: 'Which prompt will give a more precise result?', sub: 'Think: which contains more actionable visual information?', options: ['"fix the header" — short and direct, Claude can figure out the rest himself', '"Header: 48px padding, centered text, dark navy background, 40px logo height"', '"the header doesn\'t look great, I\'d love it if you could help me fix it up"', '"update the header styling" — a clear direction without over-specifying details'], correct: 1, expl: 'Specific values and visual intent let Claude execute precisely, first try.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'You say "make the font bigger." Claude makes it slightly bigger. What should you do?', sub: '', options: ['Start a new Claude session and rewrite your entire prompt from the beginning', 'Follow up with specifics: "Make it 32px, bold, with tight 1.2 line-height"', 'Give up on this approach and manually open the CSS file to edit it yourself', 'Tell Claude to undo all changes and rebuild the entire section from scratch'], correct: 1, expl: 'Just follow up with specifics! Iteration is the heart of vibe coding — be precise on round two.' },
+          { type: 'mc', tag: 'True or False', q: 'You can reference real brands or websites for visual inspiration in your prompts.', sub: 'Example: "Give it a Stripe-like aesthetic"', options: ['True — brand references give Claude excellent shared visual context to work from', 'False — you must never reference other websites or brands when prompting Claude'], correct: 0, expl: 'True! "Apple-like feel" or "Linear-inspired design system" are completely valid and very effective.' },
+          { type: 'mc', tag: 'Complete the Prompt', q: 'You want a footer. Which prompt gives Claude the most to work with?', sub: '', options: ['"Add a footer section to the bottom of the page with some navigational links"', '"Make a footer with About, Links, and Contact columns in a basic flex layout"', '"Footer: 3 columns (About, Links, Contact), dark bg #111, white text, 64px padding, top border"', '"Can you add a footer with contact details and navigation links somewhere below?"'], correct: 2, expl: 'Layout structure + specific colors + spacing = Claude nails it on the very first try!' }
+        ]
+      },
+      {
+        id: 'l3_3', title: 'The Iteration Loop', emoji: '🔄', xp: 25,
+        exercises: [
+          { type: 'info', emoji: '🔄', title: 'Refine Like You Refine Designs', content: 'Vibe coding is iterative, just like design. You don\'t expect a perfect wireframe on the first try — same here. Ask Claude to build something, review it in your browser, then refine. "Make the spacing tighter." "The blue is too bright, make it more muted." "Add a hover animation." Each prompt gets you closer.', tip: '<strong>The loop:</strong> Prompt → Preview in browser → Refine → Repeat. This is the vibe coding workflow!' },
+          { type: 'mc', tag: 'Multiple Choice', q: "Claude built your page but the colors feel off. What do you do?", sub: '', options: ['Delete everything and start fresh with a completely different visual approach', 'Say: "the colors feel off — can you make the palette more muted and earthy?"', 'Stop using Claude Code and manually edit the CSS color values in a text editor', 'Accept the result as-is and move on to building the next section of the page'], correct: 1, expl: 'Just tell it what feels wrong! Iterative feedback is the heart of vibe coding. One prompt is never the end.' },
+          { type: 'mc', tag: 'True or False', q: 'You should try to describe your entire perfect website in one giant prompt.', sub: '', options: ['True — one comprehensive prompt prevents misunderstandings and saves time', 'False — start simple and build in layers, adding detail with each iteration'], correct: 1, expl: 'False! Start with layout, then details. Building in layers is faster and gives you more control.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'The most effective way to iterate is to:', sub: '', options: ['Restart the whole project from the beginning every time something looks wrong', 'Keep typing "fix it" and "make it better" until the output finally satisfies you', 'Describe specifically what looks wrong and what you want to see instead', 'Try completely random prompts until one of them happens to produce what you want'], correct: 2, expl: '"The button is too small on mobile — make it full-width below 768px" beats "fix the button" every time.' },
+          { type: 'mc', tag: 'Complete the Prompt', q: 'After seeing the output, the spacing looks too cramped. You say:', sub: '', options: ['"More space" — Claude knows what you mean and can figure out the details', '"It looks bad and cramped" — general direction is enough for Claude to adjust', '"Spacing feels cramped — increase padding 50% throughout and add gap between sections"', '"Redo it" — a completely fresh attempt usually produces much better spacing results'], correct: 2, expl: 'Describe what you see + what you want instead. That\'s the formula that works every time.' }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'unit4', title: 'Build Anything', icon: '🔨',
+    color: 'linear-gradient(135deg, #10b981, #0ea5e9)',
+    lessons: [
+      {
+        id: 'l4_1', title: 'Creating Your First Website', emoji: '🌐', xp: 30,
+        exercises: [
+          { type: 'info', emoji: '🌐', title: 'From Idea to Live Website', content: 'Creating a website with Claude Code is as simple as asking. Navigate to a folder, start Claude Code, and say "create an index.html file with a [your description] design." Claude will create the file, write all the HTML and CSS, and you can open it directly in your browser. No hosting needed to start!', tip: '<strong>Preview trick:</strong> Right-click your HTML file → Open With → Browser. Instant preview!' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'To create a new website with Claude Code, the first thing you do is:', sub: '', options: ['Set up a local server and configure it to serve your files on port 3000', 'Navigate to your project folder in the terminal, then type claude to start', 'Install all the required npm packages and configure a build pipeline first', 'Register a domain name and set up web hosting before writing any code'], correct: 1, expl: 'Just cd into your project folder, type claude, then describe what you want. That\'s it!' },
+          { type: 'mc', tag: 'Complete the Prompt', q: "You want Claude to create a portfolio site. What's the best first prompt?", sub: '', options: ['"portfolio" — concise is best, Claude will ask clarifying questions to gather details', '"create a website" — Claude will handle all of the design decisions automatically for you', '"Portfolio site: dark theme, hero with my name and title, projects grid, contact section"', '"help me make a website" — Claude will walk you through the process step by step'], correct: 2, expl: 'A clear first prompt with key sections and a visual direction sets Claude up perfectly.' },
+          { type: 'mc', tag: 'True or False', q: 'You need to upload your files to the internet to preview your website locally.', sub: '', options: ['True — you always need a server or hosting to see any website in a browser', 'False — just open the HTML file directly in any web browser on your computer'], correct: 1, expl: 'False! Drag your index.html into Chrome or Safari. Instant local preview, no hosting required.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'After Claude creates your HTML file, how do you see what it looks like?', sub: '', options: ['Type "/preview" in Claude Code to open its built-in browser preview window', 'Open the .html file directly in any web browser — drag and drop it right in', 'Install VS Code Live Server extension and use it to preview your HTML files', 'Deploy to Netlify first and then view it live at your temporary Netlify URL'], correct: 1, expl: 'Just drag the .html file into Chrome, Firefox, or Safari. It opens instantly as a webpage.' }
+        ]
+      },
+      {
+        id: 'l4_2', title: 'Styling with Words', emoji: '💅', xp: 30,
+        exercises: [
+          { type: 'info', emoji: '💅', title: 'Your Design Vocabulary = Code', content: 'Everything you know about design translates directly into prompts. Padding, margin, font-weight, border-radius, box-shadow, gradients, animations — you can describe all of these in plain English. Claude knows both technical CSS and designer speak. Use whichever feels natural.', tip: '<strong>Both work equally well!</strong> "Add 24px padding" and "give it generous padding" — Claude understands both perfectly.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'You want a gradient background. What do you say?', sub: '', options: ['"background: linear-gradient(to bottom, #4c1d95, #1e40af)" — paste the CSS directly', '"Add a gradient from dark purple to deep blue, flowing from top to bottom"', '"background-image: linear-gradient(180deg, purple, blue)" — use partial CSS syntax', '"Make the background colorful with multiple nice gradient colors mixed in somehow"'], correct: 1, expl: '"Dark purple to deep blue, top to bottom" — plain English direction is everything Claude needs.' },
+          { type: 'mc', tag: 'Complete the Prompt', q: 'You want the hero headline to have real typographic impact. You say:', sub: '', options: ['"Bigger text" — a simple direction that Claude refines by asking follow-up questions', '"Better font" — Claude will pick something more visually striking based on the context', '"Hero headline: 72px, weight 900, -2px letter-spacing for a tight editorial feel"', '"Change the font" — Claude will browse its knowledge and pick the best available option'], correct: 2, expl: 'Typography details — size, weight, letter-spacing — every annotation becomes part of your prompt.' },
+          { type: 'mc', tag: 'True or False', q: "You can ask Claude to 'make it look like Figma's website' and it will understand.", sub: '', options: ['True — reference sites give Claude great visual context to work from immediately', 'False — Claude only understands specific CSS property names and values'], correct: 0, expl: 'True! "Stripe-like," "Apple-like," "Linear-inspired" all work beautifully as visual references.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'To add a smooth hover animation on a button, you say:', sub: '', options: ['"transition: all 0.2s ease" — pasting raw CSS is the most precise approach', '"On hover, the button should lift slightly and brighten just a little bit"', '"hover button" — Claude will add the standard hover effect it thinks fits best', '"CSS animation button" — Claude will choose the best animation type automatically'], correct: 1, expl: '"Lift slightly and brighten on hover" — Claude translates this into perfect CSS transitions.' }
+        ]
+      },
+      {
+        id: 'l4_3', title: 'Making it Interactive', emoji: '⚡', xp: 30,
+        exercises: [
+          { type: 'info', emoji: '⚡', title: 'Interactivity Without Code Knowledge', content: 'Buttons that open menus, modals that appear on click, forms that validate, animations triggered by scroll — all of this is yours with a simple prompt. You don\'t need to know JavaScript. Just describe the interaction like you\'d describe it in a prototype: "When the user clicks this button, this panel slides in from the right."', tip: '<strong>Think in prototypes:</strong> Describe interactions like you\'re explaining a Figma prototype flow to a developer.' },
+          { type: 'mc', tag: 'Complete the Prompt', q: 'You want a mobile menu. What is the most complete and effective prompt?', sub: '', options: ['"add a menu" — simple and Claude will create whatever seems most appropriate', '"hamburger menu" — Claude knows what this means and will implement one for you', '"Hamburger icon on mobile: tap opens full-screen nav sliding from left, with a close button"', '"make the menu work properly on mobile screens" — Claude handles all responsive details'], correct: 2, expl: 'You described the trigger, the behavior, and the content. That\'s a complete prompt!' },
+          { type: 'mc', tag: 'True or False', q: 'You need to know JavaScript to add interactive features with Claude Code.', sub: '', options: ['True — JavaScript knowledge is required to implement any interactive behavior', 'False — describe the interaction in plain English and Claude writes all the JS'], correct: 1, expl: 'False! Describe the interaction in plain English and Claude writes all the JavaScript for you.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'You want items to fade in as you scroll down the page. You say:', sub: '', options: ['"IntersectionObserver API" — Claude will implement the modern standard JS approach', '"animate on scroll" — Claude will choose the best scroll animation type for the layout', '"Fade in each section subtly as it enters the viewport while the user scrolls down"', '"scroll effect" — Claude will add something nice to enhance the scrolling experience'], correct: 2, expl: '"Fade in as it enters the viewport while scrolling" — clear English Claude executes perfectly.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'Claude added a feature you did not want. What do you do?', sub: '', options: ['Delete the entire file and ask Claude to rebuild everything completely from scratch', '"Remove what you just added — I want a static grid instead of a carousel here"', 'Nothing — once Claude adds something it is not possible to remove it easily', 'Close Claude and reopen it so it automatically reverts to the previous version'], correct: 1, expl: 'Just tell Claude specifically what to remove! "Take out the carousel — I want a static grid."' }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'unit5', title: 'Pro Vibe Coder', icon: '⚡',
+    color: 'linear-gradient(135deg, #f59e0b, #ef4444)',
+    lessons: [
+      {
+        id: 'l5_1', title: 'Useful Commands', emoji: '⌨️', xp: 35,
+        exercises: [
+          { type: 'info', emoji: '⌨️', title: 'Slash Commands & Shortcuts', content: 'Claude Code has a few special slash commands that are super handy. Type /help to see all commands. Type /clear to start a fresh conversation. Type /compact to free up memory for longer sessions. These are the only commands you really need to know — Claude handles everything else.', tip: '<strong>Your starter pack:</strong> /help to explore, /clear to reset, /compact to keep going in long sessions.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'What does /clear do in Claude Code?', sub: '', options: ['Permanently deletes all your project files with no warning or backup created', 'Starts a fresh conversation — wiping chat history while keeping your files safe', 'Closes Claude Code completely and ends your terminal session immediately', 'Clears only the visible terminal screen display while keeping all memory intact'], correct: 1, expl: '/clear wipes conversation history so you can start fresh. Your files always stay safe!' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'Your Claude Code session is getting slow after a long conversation. You should:', sub: '', options: ['Restart your entire computer — a fresh reboot always clears all memory and fixes slowness', 'Type /compact to condense the conversation while keeping the important context', 'Delete your project folder and ask Claude to regenerate everything from the beginning', 'Use /clear to wipe the conversation completely and start fresh from absolute scratch'], correct: 1, expl: '/compact compresses conversation history, freeing context without losing your progress.' },
+          { type: 'mc', tag: 'True or False', q: 'Pressing Ctrl+C (or Cmd+C on Mac) in the terminal stops Claude if something goes wrong.', sub: '', options: ['True — it interrupts Claude Code immediately and stops whatever it is doing', 'False — it only copies highlighted text and has no effect on Claude Code at all'], correct: 0, expl: 'True! Ctrl+C is your emergency stop. Use it any time Claude does something unexpected.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'To see all available Claude Code slash commands, you type:', sub: '', options: ['"commands" — typing any keyword pulls up all related help documentation pages', '"/commands" — the slash prefix lists everything currently available to use here', '"/help" — the standard help command that displays all available slash commands', '"help me" — plain English requests work perfectly well for getting all help info'], correct: 2, expl: '/help shows all available commands. Bookmark this one in your memory!' }
+        ]
+      },
+      {
+        id: 'l5_2', title: 'Reviewing Changes', emoji: '🔍', xp: 35,
+        exercises: [
+          { type: 'info', emoji: '🔍', title: 'Trust but Verify', content: 'Claude shows you what it\'s about to change before changing it. Always review these changes! When Claude edits a file, it shows you a diff — the old code in red, new code in green. You can also ask "what did you just change and why?" and Claude will explain everything in plain English.', tip: '<strong>Always preview in browser after changes.</strong> Refresh the page (Cmd+R or Ctrl+R) to see Claude\'s latest edits live.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'Claude shows you a diff (the changes) before editing a file. You should:', sub: '', options: ['Always approve instantly without reading — Claude is reliable and never makes mistakes', 'Take a quick look at the changes to confirm they match exactly what you requested', 'Always reject changes and ask Claude to explain every edit in full detail first', 'Ask Claude to hide the diff entirely and only show you the final finished result'], correct: 1, expl: 'Always glance at the diff! It takes 2 seconds and catches if Claude misunderstood your request.' },
+          { type: 'mc', tag: 'True or False', q: 'You can ask Claude to explain what it just changed in plain English.', sub: '', options: ['True — ask "what did you change and why?" for a clear plain-English explanation', 'False — you must read the raw code diff yourself to understand what changed'], correct: 0, expl: 'True! Ask "what did you change and why?" and Claude gives you a clear, simple explanation.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'You previewed the output and something looks broken after a change. What do you do?', sub: '', options: ['Panic and accept that this level of breakage is simply unavoidable with vibe coding', 'Tell Claude exactly what looks broken and ask it to fix that specific issue now', 'Delete the entire project and start building a completely new version from scratch', 'Manually open the file in a text editor and try to fix the code issue yourself'], correct: 1, expl: 'Tell Claude exactly what\'s broken. "The hero section collapsed after your last change — fix it."' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'Using Git with Claude Code lets you:', sub: 'You\'ll learn Git in depth soon — here\'s the preview.', options: ['Nothing that is useful — Git is only for professional developers on large teams', 'Save checkpoints of your work so you can safely roll back to any previous version', 'Share code on GitHub but you cannot have any local version history at all', 'Deploy your finished project to production hosting automatically on every save'], correct: 1, expl: 'Git = save points! Ask Claude "commit these changes" and create a checkpoint you can return to.' }
+        ]
+      },
+      {
+        id: 'l5_3', title: 'Your Complete Workflow', emoji: '🏆', xp: 50,
+        exercises: [
+          { type: 'info', emoji: '🏆', title: 'The Pro Vibe Coding Workflow', content: 'Here\'s the complete workflow: 1) Start with a clear vision (your design brain!). 2) Open terminal, navigate to project folder. 3) Type claude to start. 4) Describe what you want to build. 5) Preview in browser. 6) Refine with specific feedback. 7) Repeat until perfect. You\'re already thinking like a pro.', tip: '<strong>The golden rule:</strong> The more clearly you can describe it, the faster you\'ll build it.' },
+          { type: 'mc', tag: 'Put in Order', q: "What's the correct first step in the vibe coding workflow?", sub: '', options: ['Start Claude Code right away and let it help you figure out what to build', 'Have a clear vision of what you want to build before opening the terminal', 'Open VS Code and create your files manually before even starting Claude', 'Deploy to production first to set up the URL, then build the project locally'], correct: 1, expl: 'Always start with the vision! The clearer your idea, the better your first prompt, the faster you build.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'After Claude builds something for you, the most important next step is:', sub: '', options: ['Close the terminal right away to lock in all the changes Claude just made', 'Preview it in your browser and give Claude specific, targeted, useful feedback', 'Start a completely new Claude session to keep each change in its own context', 'Show it to a developer friend for their technical review before continuing'], correct: 1, expl: 'Preview + specific feedback = the iteration loop. This is where your designer eye becomes power.' },
+          { type: 'mc', tag: 'True or False', q: 'You can use Claude Code to build and launch a real website with no coding knowledge.', sub: '', options: ['True — that is exactly what vibe coding enables for anyone with a clear vision', 'False — you still need to write at least some code yourself to launch a real site'], correct: 0, expl: 'TRUE! From blank folder to deployed website, Claude Code can take you all the way there.' },
+          { type: 'mc', tag: 'Final Challenge', q: 'You are now a vibe coder. What is your most important skill?', sub: '', options: ['Knowing all CSS properties and syntax values by heart from years of practice', 'Memorizing JavaScript methods, arrays, and DOM manipulation patterns thoroughly', 'Clearly describing what you want visually and iterating based on what you see', 'Having a fast computer with lots of RAM and a dedicated GPU for processing'], correct: 2, expl: '🎉 Exactly! Clear description + iteration + your design eye = vibe coding mastery. Go build!' }
+        ]
+      }
+    ]
+  },
+
+  {
+    id: 'unit6', title: 'Never Lose Your Work', icon: '💾',
+    color: 'linear-gradient(135deg, #14b8a6, #0ea5e9)',
+    lessons: [
+      {
+        id: 'l6_1', title: 'Files vs. Memory', emoji: '🗂️', xp: 35,
+        exercises: [
+          {
+            type: 'info', emoji: '🗂️', title: 'Files Are Real. Memory Is Not.',
+            content: 'This is the most important thing to understand. When you close Claude Code, it forgets <em>everything</em> about your conversation. No memory of what you built, what decisions you made, or what you said. BUT — here\'s the good news — every file it created lives permanently on your hard drive. Your code is always safe. Claude\'s memory is not.<br><br>Think of Claude Code like a brilliant contractor who shows up each day with no notebook — but all the walls they built yesterday are still standing.',
+            tip: '<strong>The rule:</strong> Files are your source of truth. Claude\'s conversation is temporary scaffolding.'
+          },
+          { type: 'mc', tag: 'Multiple Choice', q: 'After you close Claude Code and reopen it the next day, what does Claude remember?', sub: '', options: ['Everything — all previous conversations and all the code it wrote are saved', 'Nothing at all — but all the files it created are still safe on your computer', 'Only the last session, which fades from memory after roughly 24 hours', 'Just the file names, but not the actual content of what was built previously'], correct: 1, expl: 'Claude starts completely fresh each session. But all your files are exactly where you left them!' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'You spent 3 hours building a website with Claude. You close the terminal. What happened?', sub: '', options: ['Nothing is lost — everything including the chat history is automatically saved', 'The website files are gone and you have to rebuild everything from the beginning', 'The conversation is gone, but your website files are completely safe on your drive', 'The CSS styles are gone but the HTML structure remains intact on your computer'], correct: 2, expl: 'The conversation history is gone. But every file Claude created — all your HTML, CSS, JS — is safe!' },
+          { type: 'mc', tag: 'True or False', q: 'When you start a new Claude Code session, it reads your project files to understand context.', sub: '', options: ['True — Claude reads your files when you ask it to, giving it the project context', 'False — Claude never reads existing files and only knows what you type in chat'], correct: 0, expl: 'True! Tell Claude "read my project files" and it can understand everything you\'ve built so far.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'The safest way to make sure your work is never lost between sessions is to:', sub: '', options: ['Never close the terminal and keep Claude Code running continuously 24/7', 'Copy and paste all your code into a Google Doc before ending each session', 'Save your work to a Git repository so it is versioned and properly backed up', 'Email yourself the code files as attachments at the end of every work session'], correct: 2, expl: 'Git is the professional answer. It creates a complete version history of your project. Coming up next!' }
+        ]
+      },
+      {
+        id: 'l6_2', title: 'Git — Your Time Machine', emoji: '⏱️', xp: 40,
+        exercises: [
+          {
+            type: 'info', emoji: '⏱️', title: 'Git: Your Project Save Button',
+            content: 'Git is a version control system — essentially a save-point system for your project. Every time you "commit," you create a snapshot of your entire project. If Claude makes a change you hate, you can roll back. If you break something, you can undo. You only need 4 commands to get started:<div class="code-block"><span class="cmd">git init</span>          <span class="comment"># Start tracking this folder</span>\n<span class="cmd">git add .</span>          <span class="comment"># Stage all your changes</span>\n<span class="cmd">git commit -m <span class="string">"message"</span></span>  <span class="comment"># Save a snapshot</span>\n<span class="cmd">git log --oneline</span>  <span class="comment"># See your save history</span></div>That\'s 90% of what you need.',
+            tip: '<strong>Ask Claude to do it for you:</strong> "Run git init and make my first commit" — Claude handles it all!'
+          },
+          { type: 'mc', tag: 'Multiple Choice', q: 'What does `git init` do?', sub: '', options: ['Downloads the Git software from the internet onto your local computer', 'Resets all project changes back to the very first version you ever saved', 'Sets up Git version control tracking inside your current project folder', 'Sends your project files up to GitHub for the first time automatically'], correct: 2, expl: 'git init creates a hidden .git folder that starts tracking all changes in your project.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'After making changes you like, the correct order of Git commands is:', sub: '', options: ['git commit → git add → git push (commit before staging your file changes)', 'git log → git add → git commit (check history before you save any changes)', 'git add . → git commit -m "description" (stage first, then save the snapshot)', 'git init → git add → git push (re-initialize Git every single time you save)'], correct: 2, expl: 'Stage your changes with git add, then commit to create the save-point snapshot.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'Claude redesigned your homepage and it looks terrible. What can Git do?', sub: '', options: ['Automatically detect the problem and restore the previous version on its own', 'Let you roll back to your last commit — the snapshot before the bad redesign', 'Send Claude a fix notification so it auto-corrects the issue next session', 'Show you what Claude planned to do before making any of the file changes'], correct: 1, expl: 'git checkout or git revert rolls you back to any previous commit. Your safety net!' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'A good Git commit message looks like:', sub: 'Good messages help you find the right save-point later.', options: ['"save" — short and fast so you can commit frequently without any friction', '"changes" — a simple label that tells Git this is a new project version', '"add hero section with purple gradient and CTA button" — specific and descriptive', '"2024-03-15" — the date, so you can find commits chronologically by time'], correct: 2, expl: 'Descriptive messages let you find the right save-point later. "WIP" tells you nothing in 3 months.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'How often should you commit your work during a vibe coding session?', sub: '', options: ['Only when the entire project is 100% finished and ready to be deployed live', 'Once at the end of each day as a daily project backup routine snapshot', 'After every meaningful chunk of work — treat commits as frequent save points', 'Only when something breaks and you need to track down where the bug started'], correct: 2, expl: 'Commit often! After every hero section, every feature, every change you\'re happy with.' }
+        ]
+      },
+      {
+        id: 'l6_3', title: 'GitHub — Cloud Backup', emoji: '☁️', xp: 40,
+        exercises: [
+          {
+            type: 'info', emoji: '☁️', title: 'GitHub: Your Work Lives in the Cloud',
+            content: 'Git lives on your computer. GitHub lives in the cloud. You "push" your project to GitHub and it\'s backed up forever — even if your laptop is stolen, dropped in water, or completely destroyed. GitHub is free for public and private projects. It\'s also where you\'ll eventually share and deploy your work.<div class="code-block"><span class="comment"># After creating a repo on github.com:</span>\n<span class="cmd">git remote add origin</span> <span class="string">https://github.com/you/project</span>\n<span class="cmd">git push -u origin main</span>  <span class="comment"># First push (sets up tracking)</span>\n<span class="cmd">git push</span>                 <span class="comment"># Every push after that</span></div>',
+            tip: '<strong>Ask Claude:</strong> "Help me push this project to GitHub" — it will walk you through every step.'
+          },
+          { type: 'mc', tag: 'Multiple Choice', q: 'What is the key difference between Git and GitHub?', sub: '', options: ['Git is for professionals while GitHub is the beginner-friendly version of the tool', 'Git tracks your changes locally on your computer; GitHub stores them in the cloud', 'Git is completely free while GitHub requires a paid subscription for most features', 'Git handles only CSS and HTML files while GitHub specializes in JavaScript code'], correct: 1, expl: 'Git = local version history. GitHub = that same history safely stored in the cloud.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'Why should you push your project to GitHub after every session?', sub: '', options: ['GitHub automatically finds and fixes any bugs in your code with its AI reviewer', 'Claude Code only works correctly when connected to an active GitHub repository', 'Your project is backed up in the cloud — safe even if your computer is lost or destroyed', 'GitHub translates your code into multiple programming languages automatically for you'], correct: 2, expl: 'Cloud backup = peace of mind. Hours of vibe coding are safe no matter what happens to your machine.' },
+          { type: 'mc', tag: 'True or False', q: 'GitHub is free to use for both public and private repositories.', sub: '', options: ['True — GitHub offers free plans with unlimited public and private repositories', 'False — private repositories always require a paid GitHub Pro subscription'], correct: 0, expl: 'True! GitHub\'s free tier is generous. You\'ll never need to pay for basic vibe coding projects.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'The command to send your local Git commits up to GitHub is:', sub: '', options: ['"git save" — sends all local changes directly to your remote GitHub repository', '"git upload" — packages and transfers your project files to GitHub cloud servers', '"git push" — pushes your committed snapshots up to your GitHub remote repository', '"git sync" — synchronizes changes bidirectionally between local and remote repos'], correct: 2, expl: 'git push sends your committed snapshots to GitHub. Simple, powerful, essential.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'Your laptop dies and you lose everything. But your work is safe because:', sub: '', options: ['You emailed yourself a ZIP file of all the project files and attachments', 'Claude Code automatically backs up sessions to Anthropic\'s servers nightly', 'You pushed your commits to GitHub and the full history lives in the cloud', 'You granted access to your laptop via a remote desktop sharing tool backup'], correct: 2, expl: 'Pushed to GitHub = safe forever. This is why we push at the end of every single session.' }
+        ]
+      }
+    ]
+  },
+
+  {
+    id: 'unit7', title: 'Smart Project Setup', icon: '🛠️',
+    color: 'linear-gradient(135deg, #ec4899, #8b5cf6)',
+    lessons: [
+      {
+        id: 'l7_1', title: 'CLAUDE.md — Claude\'s Memory', emoji: '📝', xp: 40,
+        exercises: [
+          {
+            type: 'info', emoji: '📝', title: 'Giving Claude Persistent Memory',
+            content: 'CLAUDE.md is a special file you place in your project folder. Every time you start Claude Code in that folder, it automatically reads this file. This is how you give Claude "persistent memory" — it knows your project\'s context without you having to re-explain everything each session.<div class="code-block"><span class="comment"># CLAUDE.md — Claude reads this every session</span>\n\n<span class="string">## My Portfolio Project</span>\n<span class="string">## Tech Stack:</span> HTML, CSS, vanilla JS\n\n<span class="string">## Design System</span>\n- Primary color: #7c3aed (purple)\n- Font: Inter, weights 400 and 700\n- Border radius: 12px everywhere\n\n<span class="string">## My Preferences</span>\n- I am a designer — explain things simply\n- Always use CSS variables for colors\n- Keep JavaScript minimal, no frameworks</div>',
+            tip: '<strong>Update CLAUDE.md whenever you make a new decision.</strong> It\'s your living project brief.'
+          },
+          { type: 'mc', tag: 'Multiple Choice', q: 'What is CLAUDE.md?', sub: '', options: ['A special file Claude reads automatically at the start of every project session', 'The default filename Claude uses whenever it creates new JavaScript files', 'A settings file you upload to the Anthropic website to configure your account', 'A required license file that must be included in every commercial vibe project'], correct: 0, expl: 'CLAUDE.md = Claude\'s memory file. It reads this every session so it always knows your project.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'What should you put in your CLAUDE.md file?', sub: '', options: ['API keys, passwords, and credentials for all the services you use in this project', 'A list of bugs to fix — Claude reads it and automatically fixes them each session', 'Project description, design system details, and your personal preferences for code', 'The complete source code of your project so Claude can reference it very efficiently'], correct: 2, expl: 'CLAUDE.md is your project brief — colors, fonts, tech stack, and your working preferences.' },
+          { type: 'mc', tag: 'True or False', q: 'Without CLAUDE.md, Claude Code starts every session knowing nothing about your project.', sub: '', options: ['True — without it, Claude only knows what you tell it fresh in each new session', 'False — Claude automatically learns your preferences across multiple sessions over time'], correct: 0, expl: 'True! Claude has no memory between sessions. CLAUDE.md is the bridge that carries context forward.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'You start a new session and Claude immediately knows your primary color is #7c3aed. Why?', sub: '', options: ['Claude\'s AI stored it from a previous conversation on Anthropic\'s cloud servers', 'You told Claude the color in a previous session that is somehow still active now', 'Your CLAUDE.md file contains the color and Claude read it when the session started', 'Claude automatically scanned your CSS and inferred your design preferences from it'], correct: 2, expl: 'CLAUDE.md! That\'s exactly what it\'s for — carrying your color palette and decisions across sessions.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'After a long coding session, you should update CLAUDE.md to:', sub: '', options: ['Delete all old entries so Claude starts completely fresh with no old context at all', 'Only keep info that will never change, like the original project name and start date', 'Reflect any new design decisions, components, and preferences you\'ve established', 'Add the current date so Claude knows how much time has passed since you started'], correct: 2, expl: 'Keep it current! New components, new decisions, new preferences — all go in CLAUDE.md.' }
+        ]
+      },
+      {
+        id: 'l7_2', title: 'Perfect Project Structure', emoji: '📁', xp: 40,
+        exercises: [
+          {
+            type: 'info', emoji: '📁', title: 'Organized Folders = A Happy Claude',
+            content: 'A well-structured project makes Claude Code more effective because it can find and edit the right files easily. Here\'s the structure to use:<div class="code-block">my-project/\n├── <span class="string">CLAUDE.md</span>          <span class="comment">← Claude\'s memory file</span>\n├── <span class="string">index.html</span>         <span class="comment">← Your main webpage</span>\n├── css/\n│   └── <span class="string">styles.css</span>     <span class="comment">← All your styles</span>\n├── js/\n│   └── <span class="string">app.js</span>         <span class="comment">← JavaScript if needed</span>\n├── images/            <span class="comment">← Photos and graphics</span>\n└── <span class="string">.gitignore</span>         <span class="comment">← Files Git should skip</span></div>Ask Claude to create this structure for you on day one!',
+            tip: '<strong>Pro tip:</strong> Ask Claude: "Set up my project folder structure with CLAUDE.md, css/, js/, images/, and .gitignore"'
+          },
+          { type: 'mc', tag: 'Multiple Choice', q: 'What does the .gitignore file do?', sub: '', options: ['Makes your entire project invisible so Git cannot track or version control it', 'Lists files that Git should NOT commit — like API keys, passwords, and temp files', 'Tells GitHub to ignore your project when running its automated security scans', 'A backup file that Git creates automatically whenever something goes unexpectedly wrong'], correct: 1, expl: '.gitignore keeps secrets secret. API keys, .env files, and node_modules never get committed.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'Why is having separate css/ and js/ folders beneficial for your project?', sub: '', options: ['GitHub requires this exact folder structure to be able to host your website properly', 'Claude Code can only read files that are organized into specific named sub-folders', 'Claude can quickly find and edit the right files because it knows where everything lives', 'Separating files into folders increases your page loading speed by a significant amount'], correct: 2, expl: 'Organized folders = Claude works faster and makes fewer mistakes finding the right file.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'You want to store API keys for a third-party service. Where should they go?', sub: '', options: ['In CLAUDE.md so Claude Code can access them at the start of every new session', 'At the top of index.html with a clear comment explaining exactly what they are for', 'In a .env file that is listed in .gitignore so they are never committed to GitHub', 'Directly in your JavaScript files with a clear comment explaining their purpose'], correct: 2, expl: 'NEVER commit API keys to GitHub. .env + .gitignore = your secrets stay private and safe.' },
+          { type: 'mc', tag: 'True or False', q: 'Design assets like logos and images should be stored inside your project folder.', sub: '', options: ['True — put them in an images/ or assets/ sub-folder within your project directory', 'False — design assets must always be hosted externally on a CDN like Cloudinary'], correct: 0, expl: 'True! An images/ folder inside your project keeps everything together and easy to reference.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'The very first thing you should ask Claude to do in a new project is:', sub: '', options: ['Start building the homepage immediately — structure can always be added later on', 'Write all the CSS styles first before creating any HTML structure or content', 'Set up the project structure: CLAUDE.md, folders, .gitignore, and first git commit', 'Create a detailed 50-page plan document before writing a single line of code'], correct: 2, expl: 'Structure first! Say "Set up my project folder, CLAUDE.md, and make my first git commit." Done.' }
+        ]
+      },
+      {
+        id: 'l7_3', title: 'Your Pro Daily Workflow', emoji: '🗓️', xp: 50,
+        exercises: [
+          {
+            type: 'info', emoji: '🗓️', title: 'The Workflow That Keeps You Safe',
+            content: 'Follow this every single session and you will never lose work again:<div class="code-block"><span class="comment">── STARTING A SESSION ──────────────────</span>\n<span class="cmd">cd</span> my-project          <span class="comment"># Go to your folder</span>\n<span class="cmd">claude</span>               <span class="comment"># Start Claude</span>\n<span class="string">"read CLAUDE.md and remind me what we\'re building"</span>\n\n<span class="comment">── WHILE WORKING ───────────────────────</span>\n<span class="comment"># Build → Preview → Refine → Repeat</span>\n<span class="cmd">git add . && git commit -m <span class="string">"what you did"</span></span>\n\n<span class="comment">── ENDING A SESSION ────────────────────</span>\n<span class="cmd">git add . && git commit -m <span class="string">"session summary"</span></span>\n<span class="cmd">git push</span>              <span class="comment"># Cloud backup!</span>\n<span class="comment"># Update CLAUDE.md with new decisions</span></div>',
+            tip: '<strong>The mantra:</strong> Build → Preview → Commit → Repeat → Push before you close.'
+          },
+          { type: 'mc', tag: 'Multiple Choice', q: 'The very first thing to do when starting a new Claude Code session is:', sub: '', options: ['Immediately start describing what you want to build without any setup steps at all', 'Ask Claude to generate a complete project plan document before writing any code', 'Tell Claude to read your CLAUDE.md file so it knows the full project context', 'Run git status to check for any uncommitted changes leftover from a previous session'], correct: 2, expl: '"Read CLAUDE.md and remind me what we\'re building" — this gives Claude full project context instantly.' },
+          { type: 'mc', tag: 'Multiple Choice', q: "You've been building for 2 hours without committing. The best thing to do right now is:", sub: '', options: ['Keep going until the feature is 100% done — only commit finished, polished work', 'Start a fresh Claude session to force a clean checkpoint in your conversation', 'Run git add . && git commit -m "work in progress" to save a checkpoint right now', 'Push to GitHub immediately without committing — pushing auto-creates a snapshot'], correct: 2, expl: 'Commit now! "WIP" is a perfectly valid commit message. Checkpoints beat losing 2 hours of work.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'Before ending your session, you should always push to GitHub because:', sub: '', options: ['GitHub sends you a daily email summary of all your changes only after you push', 'Claude Code will delete local files when the session ends unless they are pushed up', 'Your work is backed up in the cloud — completely safe if anything happens to your computer', 'GitHub automatically deploys your site live to production on every single push'], correct: 2, expl: 'Push = cloud backup. Laptop stolen? Hard drive fails? Your work is 100% safe on GitHub.' },
+          { type: 'mc', tag: 'Multiple Choice', q: 'You update CLAUDE.md at the end of every session because:', sub: '', options: ['CLAUDE.md expires automatically after each session and must be manually refreshed', 'Your project\'s memory stays current — Claude is instantly up-to-date next session', 'GitHub will not accept a push until CLAUDE.md has been updated and re-committed', 'Updating it clears Claude\'s cache so the very next session starts from absolute scratch'], correct: 1, expl: 'CLAUDE.md = living project brief. Update it and Claude walks into tomorrow\'s session fully briefed.' },
+          { type: 'mc', tag: 'True or False', q: 'If you follow this workflow, you should never lose more than one session\'s worth of work.', sub: '', options: ['True — with regular commits and GitHub pushes your work is always safely preserved', 'False — Git only saves text files so images and design assets are never backed up'], correct: 0, expl: 'True! Git tracks all files including images. Commit + push = total peace of mind. You\'ve got this.' }
+        ]
+      }
+    ]
+  }
+];
+
+// ═══════════════════════════════════════════════════════
+//  ACHIEVEMENTS
+// ═══════════════════════════════════════════════════════
+const ACHIEVEMENTS = [
+  { id: 'first_lesson', icon: '🌟', name: 'First Steps', desc: 'Complete your first lesson', check: s => s.completedLessons.size >= 1 },
+  { id: 'unit1_done', icon: '🧠', name: 'Mindset Unlocked', desc: 'Complete Unit 1', check: s => ['l1_1','l1_2','l1_3'].every(id => s.completedLessons.has(id)) },
+  { id: 'streak_3', icon: '🔥', name: 'On Fire!', desc: 'Reach a 3-day streak', check: s => s.streak >= 3 },
+  { id: 'xp_100', icon: '⭐', name: 'Century Club', desc: 'Earn 100+ XP', check: s => s.xp >= 100 },
+  { id: 'xp_500', icon: '💎', name: 'Diamond Coder', desc: 'Earn 500+ XP', check: s => s.xp >= 500 },
+  { id: 'git_hero', icon: '💾', name: 'Git Hero', desc: 'Complete Unit 6 — Never Lose Your Work', check: s => ['l6_1','l6_2','l6_3'].every(id => s.completedLessons.has(id)) },
+  { id: 'setup_pro', icon: '🛠️', name: 'Setup Pro', desc: 'Complete Unit 7 — Smart Project Setup', check: s => ['l7_1','l7_2','l7_3'].every(id => s.completedLessons.has(id)) },
+  { id: 'all_units', icon: '🏆', name: 'Vibe Master', desc: 'Complete all 7 units', check: s => s.completedLessons.size >= 21 },
+  { id: 'perfect', icon: '💯', name: 'Perfectionist', desc: 'Complete a lesson without any errors', check: s => s._lastPerfect },
+];
+
+// ═══════════════════════════════════════════════════════
+//  GAME STATE
+// ═══════════════════════════════════════════════════════
+const XP_PER_LEVEL = [0, 50, 120, 220, 350, 520, 730, 980, 1280, 1630, 2080];
+
+let state = {
+  xp: 0,
+  level: 1,
+  streak: 0,
+  hearts: 3,
+  lastPlayedDate: null,
+  completedLessons: new Set(),
+  unlockedAchievements: new Set(),
+  _lastPerfect: false,
+};
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem('claudequest_v2');
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    state.xp = saved.xp || 0;
+    state.level = saved.level || 1;
+    state.streak = saved.streak || 0;
+    state.hearts = saved.hearts !== undefined ? saved.hearts : 3;
+    state.lastPlayedDate = saved.lastPlayedDate || null;
+    state.completedLessons = new Set(saved.completedLessons || []);
+    state.unlockedAchievements = new Set(saved.unlockedAchievements || []);
+    if (state.lastPlayedDate) {
+      const last = new Date(state.lastPlayedDate);
+      const today = new Date();
+      const diff = Math.floor((today - last) / 86400000);
+      if (diff > 1) state.streak = 0;
+    }
+    if (saved.lastHeartTime && state.hearts < 3) {
+      const hoursElapsed = (Date.now() - saved.lastHeartTime) / 3600000;
+      const refill = Math.floor(hoursElapsed);
+      state.hearts = Math.min(3, state.hearts + refill);
+    }
+  } catch(e) {}
+}
+
+function saveState() {
+  const toSave = {
+    xp: state.xp,
+    level: state.level,
+    streak: state.streak,
+    hearts: state.hearts,
+    lastPlayedDate: state.lastPlayedDate,
+    completedLessons: [...state.completedLessons],
+    unlockedAchievements: [...state.unlockedAchievements],
+    lastHeartTime: state.hearts < 3 ? Date.now() : null,
+  };
+  localStorage.setItem('claudequest_v2', JSON.stringify(toSave));
+}
+
+function addXP(amount) {
+  state.xp += amount;
+  while (state.level < XP_PER_LEVEL.length - 1 && state.xp >= XP_PER_LEVEL[state.level]) {
+    state.level++;
+    showToast(`🎉 Level Up! You're now Level ${state.level}!`);
+  }
+  saveState();
+  updateSidebar();
+}
+
+function loseHeart() {
+  if (state.hearts > 0) {
+    state.hearts--;
+    saveState();
+    updateHeartsDisplay();
+  }
+}
+
+function updateStreak() {
+  const today = new Date().toDateString();
+  if (state.lastPlayedDate !== today) {
+    const last = state.lastPlayedDate ? new Date(state.lastPlayedDate) : null;
+    const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+    if (last && last.toDateString() === yesterday.toDateString()) {
+      state.streak++;
+    } else if (!last) {
+      state.streak = 1;
+    } else {
+      state.streak = 1;
+    }
+    state.lastPlayedDate = today;
+    saveState();
+  }
+}
+
+function checkAchievements() {
+  let newOnes = [];
+  for (const ach of ACHIEVEMENTS) {
+    if (!state.unlockedAchievements.has(ach.id) && ach.check(state)) {
+      state.unlockedAchievements.add(ach.id);
+      newOnes.push(ach);
+    }
+  }
+  if (newOnes.length) {
+    saveState();
+    setTimeout(() => {
+      newOnes.forEach((a, i) => {
+        setTimeout(() => showToast(`🏅 Achievement: ${a.name}!`), i * 1200);
+      });
+    }, 800);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  UI UTILITIES
+// ═══════════════════════════════════════════════════════
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(`screen-${name}`).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const navBtn = document.getElementById(`nav-${name}`);
+  if (navBtn) navBtn.classList.add('active');
+  if (name === 'map') renderMap();
+  if (name === 'profile') renderProfile();
+}
+
+function updateSidebar() {
+  document.getElementById('sidebar-streak').textContent = state.streak;
+  document.getElementById('sidebar-hearts').textContent = state.hearts;
+  const curLevelXP = XP_PER_LEVEL[state.level - 1] || 0;
+  const nextLevelXP = XP_PER_LEVEL[state.level] || XP_PER_LEVEL[XP_PER_LEVEL.length - 1];
+  const progress = ((state.xp - curLevelXP) / (nextLevelXP - curLevelXP)) * 100;
+  document.getElementById('xp-bar-fill').style.width = Math.min(100, Math.max(0, progress)) + '%';
+  document.getElementById('xp-label').textContent = `${state.xp} XP`;
+  document.getElementById('xp-level-label').textContent = `Level ${state.level}`;
+}
+
+function updateHeartsDisplay() {
+  const hearts = '❤️'.repeat(state.hearts) + '🖤'.repeat(3 - state.hearts);
+  document.getElementById('hearts-display').textContent = hearts;
+  document.getElementById('sidebar-hearts').textContent = state.hearts;
+}
+
+function showToast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+function showXPPopup(amount, x, y) {
+  const el = document.createElement('div');
+  el.className = 'xp-popup';
+  el.textContent = `+${amount} XP`;
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1200);
+}
+
+// ═══════════════════════════════════════════════════════
+//  MAP RENDERING
+// ═══════════════════════════════════════════════════════
+function getAllLessons() {
+  return CURRICULUM.flatMap(u => u.lessons);
+}
+
+function isLessonUnlocked(lessonId) {
+  const allLessons = getAllLessons();
+  const idx = allLessons.findIndex(l => l.id === lessonId);
+  if (idx === 0) return true;
+  return state.completedLessons.has(allLessons[idx - 1].id);
+}
+
+function renderMap() {
+  const container = document.getElementById('path-container');
+  container.innerHTML = '';
+
+  CURRICULUM.forEach(unit => {
+    const block = document.createElement('div');
+    block.className = 'unit-block';
+
+    const completedInUnit = unit.lessons.filter(l => state.completedLessons.has(l.id)).length;
+    const isUnitLocked = !isLessonUnlocked(unit.lessons[0].id);
+
+    const banner = document.createElement('div');
+    banner.className = `unit-banner${isUnitLocked ? ' locked' : ''}`;
+    banner.innerHTML = `
+      <div class="unit-banner-icon">${isUnitLocked ? '🔒' : unit.icon}</div>
+      <div class="unit-banner-info">
+        <div class="unit-banner-title">${unit.title}</div>
+        <div class="unit-banner-subtitle">${unit.lessons.length} lessons</div>
+      </div>
+      <div class="unit-banner-progress" style="color:${isUnitLocked?'#64748b':'#fff'}">${completedInUnit}/${unit.lessons.length}</div>
+    `;
+    if (!isUnitLocked) banner.style.background = unit.color;
+    block.appendChild(banner);
+
+    const path = document.createElement('div');
+    path.className = 'lessons-path';
+
+    unit.lessons.forEach((lesson, i) => {
+      const unlocked = isLessonUnlocked(lesson.id);
+      const completed = state.completedLessons.has(lesson.id);
+      const isCurrent = unlocked && !completed;
+
+      const node = document.createElement('div');
+      node.className = 'lesson-node';
+
+      const btn = document.createElement('button');
+      btn.className = `lesson-btn ${completed ? 'completed' : isCurrent ? 'current' : 'locked'}`;
+      btn.innerHTML = completed ? '✓' : lesson.emoji;
+
+      if (completed) {
+        const crown = document.createElement('div');
+        crown.className = 'crown-badge';
+        crown.textContent = '👑';
+        btn.appendChild(crown);
+      }
+
+      if (unlocked) {
+        btn.onclick = () => startLesson(lesson.id);
+      }
+
+      const label = document.createElement('div');
+      label.className = `lesson-label ${completed ? 'completed' : isCurrent ? 'current' : ''}`;
+      label.textContent = lesson.title;
+
+      node.appendChild(btn);
+      node.appendChild(label);
+      path.appendChild(node);
+    });
+
+    block.appendChild(path);
+    container.appendChild(block);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  LESSON ENGINE
+// ═══════════════════════════════════════════════════════
+let activeLesson = null;
+let exerciseIndex = 0;
+let wrongCount = 0;
+let lessonStartTime = 0;
+let selectedOption = null;
+
+function startLesson(lessonId) {
+  const lesson = getAllLessons().find(l => l.id === lessonId);
+  if (!lesson) return;
+  activeLesson = lesson;
+  exerciseIndex = 0;
+  wrongCount = 0;
+  lessonStartTime = Date.now();
+  selectedOption = null;
+  state._lastPerfect = false;
+
+  showScreen('lesson');
+  document.getElementById('nav-map').classList.add('active');
+  renderExercise();
+}
+
+function renderExercise() {
+  if (exerciseIndex >= activeLesson.exercises.length) {
+    completeLessonFlow();
+    return;
+  }
+  const ex = activeLesson.exercises[exerciseIndex];
+  const total = activeLesson.exercises.length;
+  const pct = (exerciseIndex / total) * 100;
+  document.getElementById('lesson-progress').style.width = pct + '%';
+  updateHeartsDisplay();
+
+  const fb = document.getElementById('feedback-bar');
+  fb.className = 'feedback-bar';
+
+  const body = document.getElementById('lesson-body');
+  body.innerHTML = '';
+
+  if (ex.type === 'info') {
+    body.appendChild(renderInfoCard(ex));
+  } else if (ex.type === 'mc') {
+    body.appendChild(renderMCCard(ex));
+  }
+}
+
+function renderInfoCard(ex) {
+  const card = document.createElement('div');
+  card.className = 'card info-card';
+  card.innerHTML = `
+    <span class="card-emoji">${ex.emoji}</span>
+    <h2>${ex.title}</h2>
+    <div class="content">${ex.content}</div>
+    ${ex.tip ? `<div class="tip">${ex.tip}</div>` : ''}
+    <button class="check-btn" onclick="nextExercise()">Got it! Continue →</button>
+  `;
+  return card;
+}
+
+function renderMCCard(ex) {
+  const card = document.createElement('div');
+  card.className = 'card question-card';
+  const letters = ['A', 'B', 'C', 'D'];
+
+  let codeHTML = ex.code ? `<div class="code-block">${ex.code}</div>` : '';
+
+  card.innerHTML = `
+    <div class="question-tag">${ex.tag}</div>
+    <h2>${ex.q}</h2>
+    ${ex.sub ? `<p class="subtitle">${ex.sub}</p>` : ''}
+    ${codeHTML}
+    <div class="options-grid${ex.options.length <= 2 ? ' single' : ''}">
+      ${ex.options.map((opt, i) => `
+        <button class="option-btn" id="opt-${i}" onclick="selectOption(${i})">
+          <div class="opt-letter">${letters[i]}</div>
+          <span>${opt}</span>
+        </button>
+      `).join('')}
+    </div>
+    <button class="check-btn" id="check-btn" disabled onclick="checkAnswer()">Check Answer</button>
+  `;
+  selectedOption = null;
+  return card;
+}
+
+function selectOption(idx) {
+  if (document.getElementById('check-btn').disabled === false &&
+      document.querySelector('.option-btn.correct')) return;
+
+  document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById(`opt-${idx}`).classList.add('selected');
+  selectedOption = idx;
+  const checkBtn = document.getElementById('check-btn');
+  if (checkBtn) checkBtn.disabled = false;
+}
+
+function checkAnswer() {
+  if (selectedOption === null) return;
+  const ex = activeLesson.exercises[exerciseIndex];
+  const isCorrect = selectedOption === ex.correct;
+
+  document.querySelectorAll('.option-btn').forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === ex.correct) btn.classList.add('correct');
+    else if (i === selectedOption && !isCorrect) btn.classList.add('wrong');
+  });
+  document.getElementById('check-btn').style.display = 'none';
+
+  const fb = document.getElementById('feedback-bar');
+  if (isCorrect) {
+    fb.className = 'feedback-bar correct';
+    document.getElementById('feedback-icon').textContent = '✅';
+    document.getElementById('feedback-title').textContent = getCorrectMsg();
+    document.getElementById('feedback-desc').textContent = ex.expl;
+    document.getElementById('continue-btn').textContent = 'Continue →';
+    const rect = document.getElementById('hearts-display').getBoundingClientRect();
+    showXPPopup(5, rect.left, rect.top - 30);
+  } else {
+    fb.className = 'feedback-bar wrong';
+    document.getElementById('feedback-icon').textContent = '❌';
+    document.getElementById('feedback-title').textContent = 'Not quite!';
+    document.getElementById('feedback-desc').textContent = ex.expl;
+    document.getElementById('continue-btn').textContent = 'Got it →';
+    loseHeart();
+    wrongCount++;
+  }
+}
+
+function getCorrectMsg() {
+  const msgs = ['Nailed it!', 'Correct!', 'You got it!', 'That\'s right!', 'Perfect!', 'Exactly!'];
+  return msgs[Math.floor(Math.random() * msgs.length)];
+}
+
+function nextExercise() {
+  exerciseIndex++;
+  renderExercise();
+}
+
+function completeLessonFlow() {
+  if (wrongCount === 0) state._lastPerfect = true;
+
+  const elapsed = Math.round((Date.now() - lessonStartTime) / 1000);
+  const mins = Math.floor(elapsed / 60);
+  const secs = elapsed % 60;
+  const timeStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+  const accuracy = Math.round(((activeLesson.exercises.filter(e => e.type !== 'info').length - wrongCount) / Math.max(1, activeLesson.exercises.filter(e => e.type !== 'info').length)) * 100);
+
+  state.completedLessons.add(activeLesson.id);
+  updateStreak();
+  addXP(activeLesson.xp);
+  checkAchievements();
+  saveState();
+
+  document.getElementById('complete-lesson-name').textContent = `"${activeLesson.title}" — ${activeLesson.emoji}`;
+  document.getElementById('complete-xp').textContent = `+${activeLesson.xp}`;
+  document.getElementById('complete-acc').textContent = `${accuracy}%`;
+  document.getElementById('complete-time').textContent = timeStr;
+
+  showScreen('complete');
+}
+
+function finishLesson() {
+  activeLesson = null;
+  showScreen('map');
+}
+
+function exitLesson() {
+  if (confirm('Exit this lesson? Your progress will be lost.')) {
+    activeLesson = null;
+    showScreen('map');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  PROFILE
+// ═══════════════════════════════════════════════════════
+function renderProfile() {
+  document.getElementById('profile-xp').textContent = state.xp;
+  document.getElementById('profile-streak').textContent = state.streak;
+  document.getElementById('profile-lessons').textContent = state.completedLessons.size;
+
+  const grid = document.getElementById('achievements-grid');
+  grid.innerHTML = '';
+  ACHIEVEMENTS.forEach(ach => {
+    const unlocked = state.unlockedAchievements.has(ach.id);
+    const el = document.createElement('div');
+    el.className = `achievement ${unlocked ? 'unlocked' : 'locked'}`;
+    el.innerHTML = `
+      <div class="ach-icon">${ach.icon}</div>
+      <div class="ach-info">
+        <div class="ach-name">${ach.name}</div>
+        <div class="ach-desc">${ach.desc}</div>
+      </div>
+    `;
+    grid.appendChild(el);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+loadState();
+updateSidebar();
+renderMap();
+</script>
+</body>
+</html>
